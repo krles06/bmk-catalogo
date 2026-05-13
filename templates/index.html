@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo BMK</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
+      padding: 2rem;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      color: #111827;
+      margin-bottom: 0.3rem;
+    }
+    .header p {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.95rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      text-decoration: none;
+      line-height: 1;
+    }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+
+    .btn-green { background: #16a34a; color: white; }
+    .btn-green:hover:not(:disabled) { background: #15803d; }
+    .btn-green:disabled { background: #86efac; cursor: not-allowed; }
+
+    .btn-blue { background: #2563eb; color: white; margin-top: 1.25rem; }
+    .btn-blue:hover { background: #1d4ed8; }
+
+    .alert {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .alert-yellow { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .alert-red    { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+    .progress-section { margin-top: 1.5rem; }
+
+    .progress-wrap {
+      background: #e5e7eb;
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .progress-bar {
+      height: 100%;
+      border-radius: 999px;
+      background: #16a34a;
+      width: 0;
+      transition: width 0.4s ease, background 0.4s;
+    }
+    .progress-bar.running {
+      width: 40%;
+      animation: indeterminate 1.4s ease-in-out infinite;
+    }
+    .progress-bar.done  { width: 100%; }
+    .progress-bar.error { width: 100%; background: #ef4444; }
+
+    @keyframes indeterminate {
+      0%   { transform: translateX(-150%); }
+      100% { transform: translateX(350%); }
+    }
+
+    .log {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 1rem;
+      height: 340px;
+      overflow-y: auto;
+      font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+    .log-line      { color: #cbd5e1; white-space: pre-wrap; word-break: break-all; }
+    .log-line.ok   { color: #4ade80; }
+    .log-line.err  { color: #f87171; }
+    .log-line.warn { color: #facc15; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      .card { padding: 1.25rem; border-radius: 14px; }
+      .header h1 { font-size: 1.3rem; }
+      .log { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>🚲 Catálogo BMK</h1>
+      <p>Generador de precios Bicicmarket</p>
+    </div>
+
+    <button class="btn btn-green" id="btnGenerar">
+      ⚡ Generar catálogo
+    </button>
+
+    <div class="alert alert-yellow hidden" id="alertRunning">
+      Ya hay una generación en curso. Vuelve en unos minutos.
+    </div>
+    <div class="alert alert-red hidden" id="alertError"></div>
+
+    <div class="progress-section hidden" id="progressSection">
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+
+    <a class="btn btn-blue hidden" id="btnDescargar" href="/descargar">
+      ⬇️ Descargar catálogo Excel
+    </a>
+  </div>
+
+  <script>
+    const btnGenerar     = document.getElementById('btnGenerar');
+    const alertRunning   = document.getElementById('alertRunning');
+    const alertError     = document.getElementById('alertError');
+    const progressSection = document.getElementById('progressSection');
+    const progressBar    = document.getElementById('progressBar');
+    const log            = document.getElementById('log');
+    const btnDescargar   = document.getElementById('btnDescargar');
+
+    let es = null;
+
+    function addLine(text) {
+      if (!text) return;
+      const d = document.createElement('div');
+      d.className = 'log-line';
+      if (/✅|Listo/.test(text))                    d.classList.add('ok');
+      else if (/❌|[Ee]rror|[Ee]xcepci|Traceback/.test(text)) d.classList.add('err');
+      else if (/⚠️|⬇️|[Ww]arning/.test(text))       d.classList.add('warn');
+      d.textContent = text;
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showProgress() {
+      progressSection.classList.remove('hidden');
+      progressBar.className = 'progress-bar running';
+      btnGenerar.disabled = true;
+      alertRunning.classList.add('hidden');
+      alertError.classList.add('hidden');
+    }
+
+    function closeStream() {
+      if (es) { es.close(); es = null; }
+    }
+
+    function onDone() {
+      progressBar.className = 'progress-bar done';
+      btnDescargar.classList.remove('hidden');
+      btnGenerar.disabled = false;
+      closeStream();
+    }
+
+    function onError(msg) {
+      progressBar.className = 'progress-bar error';
+      alertError.textContent = '⚠️ ' + (msg || 'Ha ocurrido un error.');
+      alertError.classList.remove('hidden');
+      btnGenerar.disabled = false;
+      closeStream();
+    }
+
+    function startStream() {
+      closeStream();
+      es = new EventSource('/stream');
+      es.onmessage = e => addLine(e.data);
+      es.addEventListener('done', onDone);
+      es.addEventListener('job_error', e => onError(e.data));
+      es.onerror = () => {
+        if (es && es.readyState === EventSource.CLOSED) {
+          onError('La conexión se cerró inesperadamente. Recarga la página.');
+        }
+      };
+    }
+
+    btnGenerar.addEventListener('click', async () => {
+      alertRunning.classList.add('hidden');
+      alertError.classList.add('hidden');
+      btnDescargar.classList.add('hidden');
+      log.innerHTML = '';
+
+      try {
+        const res = await fetch('/generar', { method: 'POST' });
+        if (res.status === 409) {
+          alertRunning.classList.remove('hidden');
+          return;
+        }
+        if (!res.ok) {
+          alertError.textContent = 'Error al iniciar la generación.';
+          alertError.classList.remove('hidden');
+          return;
+        }
+        showProgress();
+        startStream();
+      } catch (err) {
+        alertError.textContent = 'Error de conexión: ' + err.message;
+        alertError.classList.remove('hidden');
+      }
+    });
+
+    // Restore UI state on page load/refresh
+    {% if running %}
+    showProgress();
+    startStream();
+    {% elif has_file %}
+    btnDescargar.classList.remove('hidden');
+    {% endif %}
+  </script>
+</body>
+</html>

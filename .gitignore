@@ -1,0 +1,8 @@
+*.xlsx
+*.xls
+__pycache__/
+*.pyc
+.DS_Store
+gg.txt
+añadir_precio_web2.py
+.claude/
