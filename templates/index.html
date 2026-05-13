@@ -7,161 +7,249 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #161616;
+      --border:    #2a2a2a;
+      --orange:    #f97316;
+      --orange-h:  #ea580c;
+      --text:      #f5f5f5;
+      --muted:     #737373;
+      --log-bg:    #0a0a0a;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f4f8;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding: 2rem 1rem;
+      padding: 2.5rem 1rem;
     }
 
     .card {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
       padding: 2rem;
       width: 100%;
-      max-width: 700px;
+      max-width: 680px;
     }
 
+    /* ── Header ── */
     .header {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
       margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
     }
-    .header h1 {
-      font-size: 1.6rem;
-      color: #111827;
-      margin-bottom: 0.3rem;
+    .header-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--orange);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    .header p {
-      color: #6b7280;
-      font-size: 0.95rem;
-    }
+    .header-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; }
+    .header-text h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+    .header-text p  { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 
+    /* ── Button ── */
     .btn {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
       width: 100%;
-      padding: 0.95rem 1.5rem;
+      padding: 0.85rem 1.5rem;
       border: none;
-      border-radius: 12px;
-      font-size: 1.05rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
       text-decoration: none;
-      line-height: 1;
+      letter-spacing: 0.01em;
     }
+    .btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; flex-shrink: 0; }
     .btn:active:not(:disabled) { transform: scale(0.98); }
 
-    .btn-green { background: #16a34a; color: white; }
-    .btn-green:hover:not(:disabled) { background: #15803d; }
-    .btn-green:disabled { background: #86efac; cursor: not-allowed; }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover:not(:disabled) { background: var(--orange-h); }
+    .btn-orange:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .btn-blue { background: #2563eb; color: white; margin-top: 1.25rem; }
-    .btn-blue:hover { background: #1d4ed8; }
+    .btn-outline {
+      background: transparent;
+      color: var(--orange);
+      border: 1px solid var(--orange);
+      margin-top: 1rem;
+    }
+    .btn-outline:hover { background: rgba(249,115,22,0.08); }
 
+    /* ── Limite selector ── */
+    .limite-wrap {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.25rem;
+      align-items: center;
+    }
+    .limite-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .limite-label input[type="radio"] {
+      accent-color: var(--orange);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+    .limite-input {
+      width: 62px;
+      padding: 0.25rem 0.4rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+    .limite-input:focus { outline: none; border-color: var(--orange); }
+    .limite-input:disabled { opacity: 0.35; }
+
+    /* ── Alerts ── */
     .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
       margin-top: 1rem;
       padding: 0.75rem 1rem;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
       line-height: 1.5;
     }
-    .alert-yellow { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
-    .alert-red    { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+    .alert-yellow { background: rgba(234,179,8,0.08); color: #fbbf24; border: 1px solid rgba(234,179,8,0.2); }
+    .alert-red    { background: rgba(239,68,68,0.08);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
 
+    /* ── Progress ── */
     .progress-section { margin-top: 1.5rem; }
 
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+    .progress-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .progress-status {
+      font-size: 0.75rem;
+      color: var(--orange);
+      font-weight: 600;
+    }
+
     .progress-wrap {
-      background: #e5e7eb;
+      background: #222;
       border-radius: 999px;
-      height: 6px;
+      height: 4px;
       overflow: hidden;
       margin-bottom: 1rem;
     }
     .progress-bar {
       height: 100%;
       border-radius: 999px;
-      background: #16a34a;
+      background: var(--orange);
       width: 0;
       transition: width 0.4s ease, background 0.4s;
     }
     .progress-bar.running {
-      width: 40%;
-      animation: indeterminate 1.4s ease-in-out infinite;
+      width: 35%;
+      animation: slide 1.6s ease-in-out infinite;
     }
     .progress-bar.done  { width: 100%; }
     .progress-bar.error { width: 100%; background: #ef4444; }
 
-    @keyframes indeterminate {
-      0%   { transform: translateX(-150%); }
-      100% { transform: translateX(350%); }
+    @keyframes slide {
+      0%   { transform: translateX(-180%); }
+      100% { transform: translateX(400%); }
     }
 
+    /* ── Log ── */
     .log {
-      background: #0f172a;
+      background: var(--log-bg);
+      border: 1px solid var(--border);
       border-radius: 10px;
       padding: 1rem;
-      height: 340px;
+      height: 320px;
       overflow-y: auto;
       font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
-      font-size: 0.78rem;
-      line-height: 1.6;
+      font-size: 0.76rem;
+      line-height: 1.7;
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
     }
-    .log-line      { color: #cbd5e1; white-space: pre-wrap; word-break: break-all; }
+    .log::-webkit-scrollbar { width: 4px; }
+    .log::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+    .log-line      { color: #6b7280; white-space: pre-wrap; word-break: break-all; }
     .log-line.ok   { color: #4ade80; }
     .log-line.err  { color: #f87171; }
-    .log-line.warn { color: #facc15; }
+    .log-line.info { color: #e5e7eb; }
 
     .hidden { display: none !important; }
 
-    .limite-wrap {
-      margin-top: 0.85rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem 1.5rem;
-      align-items: center;
-      font-size: 0.9rem;
-      color: #374151;
-    }
-    .limite-label {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      cursor: pointer;
-    }
-    .limite-input {
-      width: 60px;
-      padding: 0.2rem 0.4rem;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-    .limite-input:disabled { background: #f3f4f6; color: #9ca3af; }
-    .limite-hint { color: #9ca3af; font-size: 0.8rem; }
-
     @media (max-width: 480px) {
-      .card { padding: 1.25rem; border-radius: 14px; }
-      .header h1 { font-size: 1.3rem; }
-      .log { height: 260px; }
+      body { padding: 1rem 0.75rem; }
+      .card { padding: 1.25rem; }
+      .log { height: 240px; }
     }
   </style>
 </head>
 <body>
   <div class="card">
+
     <div class="header">
-      <h1>🚲 Catálogo BMK</h1>
-      <p>Generador de precios Bicicmarket</p>
+      <div class="header-icon">
+        <!-- Bike icon -->
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5.5" cy="17.5" r="3.5"/>
+          <circle cx="18.5" cy="17.5" r="3.5"/>
+          <path d="M15 6h-5l-1 7h9"/>
+          <path d="M9 6l3 11"/>
+          <circle cx="14" cy="6" r="1" fill="white" stroke="none"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Catálogo BMK</h1>
+        <p>Generador de precios Bicimarket</p>
+      </div>
     </div>
 
-    <button class="btn btn-green" id="btnGenerar">
-      ⚡ Generar catálogo
+    <button class="btn btn-orange" id="btnGenerar">
+      <!-- Zap icon -->
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      Generar catálogo
     </button>
 
     <div class="limite-wrap">
@@ -171,46 +259,78 @@
       <label class="limite-label">
         <input type="radio" name="limite" value="custom"> Solo
         <input type="number" id="limiteNum" min="1" max="999" value="10" class="limite-input">
-        bicicletas <span class="limite-hint">(para pruebas)</span>
+        bicicletas (prueba)
       </label>
     </div>
 
     <div class="alert alert-yellow hidden" id="alertRunning">
+      <!-- Clock icon -->
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
       Ya hay una generación en curso. Vuelve en unos minutos.
     </div>
-    <div class="alert alert-red hidden" id="alertError"></div>
+
+    <div class="alert alert-red hidden" id="alertError">
+      <!-- X-circle icon -->
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      <span id="alertErrorMsg"></span>
+    </div>
 
     <div class="progress-section hidden" id="progressSection">
+      <div class="progress-header">
+        <span class="progress-label">Progreso</span>
+        <span class="progress-status" id="progressStatus">Procesando...</span>
+      </div>
       <div class="progress-wrap">
         <div class="progress-bar" id="progressBar"></div>
       </div>
       <div class="log" id="log"></div>
     </div>
 
-    <a class="btn btn-blue hidden" id="btnDescargar" href="/descargar">
-      ⬇️ Descargar catálogo Excel
+    <a class="btn btn-outline hidden" id="btnDescargar" href="/descargar">
+      <!-- Download icon -->
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Descargar Excel
     </a>
+
   </div>
 
   <script>
-    const limiteNum      = document.getElementById('limiteNum');
-    const btnGenerar     = document.getElementById('btnGenerar');
-    const alertRunning   = document.getElementById('alertRunning');
-    const alertError     = document.getElementById('alertError');
+    const limiteNum       = document.getElementById('limiteNum');
+    const btnGenerar      = document.getElementById('btnGenerar');
+    const alertRunning    = document.getElementById('alertRunning');
+    const alertError      = document.getElementById('alertError');
+    const alertErrorMsg   = document.getElementById('alertErrorMsg');
     const progressSection = document.getElementById('progressSection');
-    const progressBar    = document.getElementById('progressBar');
-    const log            = document.getElementById('log');
-    const btnDescargar   = document.getElementById('btnDescargar');
+    const progressBar     = document.getElementById('progressBar');
+    const progressStatus  = document.getElementById('progressStatus');
+    const log             = document.getElementById('log');
+    const btnDescargar    = document.getElementById('btnDescargar');
 
     let es = null;
+
+    // Habilitar/deshabilitar input de número
+    document.querySelectorAll('input[name="limite"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        limiteNum.disabled = radio.value !== 'custom';
+      });
+    });
+    limiteNum.disabled = true;
 
     function addLine(text) {
       if (!text) return;
       const d = document.createElement('div');
       d.className = 'log-line';
-      if (/✅|Listo/.test(text))                    d.classList.add('ok');
-      else if (/❌|[Ee]rror|[Ee]xcepci|Traceback/.test(text)) d.classList.add('err');
-      else if (/⚠️|⬇️|[Ww]arning/.test(text))       d.classList.add('warn');
+      if (/Listo|successfully|OK/.test(text))           d.classList.add('ok');
+      else if (/[Ee]rror|[Ee]xcep|Traceback/.test(text)) d.classList.add('err');
+      else if (/\[/.test(text))                          d.classList.add('info');
       d.textContent = text;
       log.appendChild(d);
       log.scrollTop = log.scrollHeight;
@@ -219,6 +339,7 @@
     function showProgress() {
       progressSection.classList.remove('hidden');
       progressBar.className = 'progress-bar running';
+      progressStatus.textContent = 'Procesando...';
       btnGenerar.disabled = true;
       alertRunning.classList.add('hidden');
       alertError.classList.add('hidden');
@@ -230,6 +351,8 @@
 
     function onDone() {
       progressBar.className = 'progress-bar done';
+      progressStatus.textContent = 'Completado';
+      progressStatus.style.color = '#4ade80';
       btnDescargar.classList.remove('hidden');
       btnGenerar.disabled = false;
       closeStream();
@@ -237,7 +360,9 @@
 
     function onError(msg) {
       progressBar.className = 'progress-bar error';
-      alertError.textContent = '⚠️ ' + (msg || 'Ha ocurrido un error.');
+      progressStatus.textContent = 'Error';
+      progressStatus.style.color = '#f87171';
+      alertErrorMsg.textContent = msg || 'Ha ocurrido un error.';
       alertError.classList.remove('hidden');
       btnGenerar.disabled = false;
       closeStream();
@@ -256,19 +381,12 @@
       };
     }
 
-    // Habilitar/deshabilitar el input de número según el radio seleccionado
-    document.querySelectorAll('input[name="limite"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        limiteNum.disabled = radio.value !== 'custom';
-      });
-    });
-    limiteNum.disabled = true; // empieza deshabilitado (selección "completo")
-
     btnGenerar.addEventListener('click', async () => {
       alertRunning.classList.add('hidden');
       alertError.classList.add('hidden');
       btnDescargar.classList.add('hidden');
       log.innerHTML = '';
+      progressStatus.style.color = '';
 
       const modoCustom = document.querySelector('input[name="limite"][value="custom"]').checked;
       const limite = modoCustom ? parseInt(limiteNum.value) || 10 : null;
@@ -279,24 +397,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ limite }),
         });
-        if (res.status === 409) {
-          alertRunning.classList.remove('hidden');
-          return;
-        }
-        if (!res.ok) {
-          alertError.textContent = 'Error al iniciar la generación.';
-          alertError.classList.remove('hidden');
-          return;
-        }
+        if (res.status === 409) { alertRunning.classList.remove('hidden'); return; }
+        if (!res.ok) { onError('Error al iniciar la generación.'); return; }
         showProgress();
         startStream();
       } catch (err) {
-        alertError.textContent = 'Error de conexión: ' + err.message;
-        alertError.classList.remove('hidden');
+        onError('Error de conexión: ' + err.message);
       }
     });
 
-    // Restore UI state on page load/refresh
     {% if running %}
     showProgress();
     startStream();
