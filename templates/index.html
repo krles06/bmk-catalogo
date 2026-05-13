@@ -120,6 +120,32 @@
 
     .hidden { display: none !important; }
 
+    .limite-wrap {
+      margin-top: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+    .limite-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+    .limite-input {
+      width: 60px;
+      padding: 0.2rem 0.4rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .limite-input:disabled { background: #f3f4f6; color: #9ca3af; }
+    .limite-hint { color: #9ca3af; font-size: 0.8rem; }
+
     @media (max-width: 480px) {
       .card { padding: 1.25rem; border-radius: 14px; }
       .header h1 { font-size: 1.3rem; }
@@ -137,6 +163,17 @@
     <button class="btn btn-green" id="btnGenerar">
       ⚡ Generar catálogo
     </button>
+
+    <div class="limite-wrap">
+      <label class="limite-label">
+        <input type="radio" name="limite" value="completo" checked> Catálogo completo
+      </label>
+      <label class="limite-label">
+        <input type="radio" name="limite" value="custom"> Solo
+        <input type="number" id="limiteNum" min="1" max="999" value="10" class="limite-input">
+        bicicletas <span class="limite-hint">(para pruebas)</span>
+      </label>
+    </div>
 
     <div class="alert alert-yellow hidden" id="alertRunning">
       Ya hay una generación en curso. Vuelve en unos minutos.
@@ -156,6 +193,7 @@
   </div>
 
   <script>
+    const limiteNum      = document.getElementById('limiteNum');
     const btnGenerar     = document.getElementById('btnGenerar');
     const alertRunning   = document.getElementById('alertRunning');
     const alertError     = document.getElementById('alertError');
@@ -218,14 +256,29 @@
       };
     }
 
+    // Habilitar/deshabilitar el input de número según el radio seleccionado
+    document.querySelectorAll('input[name="limite"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        limiteNum.disabled = radio.value !== 'custom';
+      });
+    });
+    limiteNum.disabled = true; // empieza deshabilitado (selección "completo")
+
     btnGenerar.addEventListener('click', async () => {
       alertRunning.classList.add('hidden');
       alertError.classList.add('hidden');
       btnDescargar.classList.add('hidden');
       log.innerHTML = '';
 
+      const modoCustom = document.querySelector('input[name="limite"][value="custom"]').checked;
+      const limite = modoCustom ? parseInt(limiteNum.value) || 10 : null;
+
       try {
-        const res = await fetch('/generar', { method: 'POST' });
+        const res = await fetch('/generar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ limite }),
+        });
         if (res.status === 409) {
           alertRunning.classList.remove('hidden');
           return;

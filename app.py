@@ -6,7 +6,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, Response, render_template, jsonify, send_file
+from flask import Flask, Response, render_template, jsonify, send_file, request
 
 app = Flask(__name__)
 
@@ -22,7 +22,7 @@ _state = {
 TIMEOUT_SECS = 30 * 60  # 30 minutos
 
 
-def _run():
+def _run(limite=None):
     fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = f"/tmp/catalogo_{fecha}.xlsx"
     script = str(Path(__file__).parent / 'procesar_catalogo.py')
@@ -31,9 +31,13 @@ def _run():
         with _lock:
             _state['logs'].append(line)
 
+    cmd = [sys.executable, script, '--descargar', '--output', output_file]
+    if limite:
+        cmd += ['--limite', str(limite)]
+
     try:
         proc = subprocess.Popen(
-            [sys.executable, script, '--descargar', '--output', output_file],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -86,6 +90,16 @@ def health():
 
 @app.route('/generar', methods=['POST'])
 def generar():
+    data = request.get_json(silent=True) or {}
+    limite = data.get('limite')
+    if limite is not None:
+        try:
+            limite = int(limite)
+            if limite <= 0:
+                limite = None
+        except (ValueError, TypeError):
+            limite = None
+
     with _lock:
         if _state['running']:
             return jsonify({'error': 'already_running'}), 409
@@ -95,7 +109,7 @@ def generar():
         _state['output_file'] = None
         _state['logs'] = []
 
-    threading.Thread(target=_run, daemon=True).start()
+    threading.Thread(target=_run, args=(limite,), daemon=True).start()
     return jsonify({'ok': True})
 
 
