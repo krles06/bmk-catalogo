@@ -4,11 +4,16 @@ import time
 import threading
 import subprocess
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 
-from flask import Flask, Response, render_template, jsonify, send_file, request
+from flask import (Flask, Response, render_template, jsonify,
+                   send_file, request, session, redirect, url_for)
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
+
+APP_PASSWORD = os.environ.get('APP_PASSWORD', '')
 
 _lock = threading.Lock()
 _state = {
@@ -21,6 +26,36 @@ _state = {
 
 TIMEOUT_SECS = 30 * 60  # 30 minutos
 
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login', next=request.path))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form.get('password') == APP_PASSWORD:
+            session['logged_in'] = True
+            return redirect(request.args.get('next') or url_for('index'))
+        error = 'Contraseña incorrecta'
+    return render_template('login.html', error=error)
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
+# ── Script runner ─────────────────────────────────────────────────────────────
 
 def _run(limite=None):
     fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -49,7 +84,7 @@ def _run(limite=None):
         for line in iter(proc.stdout.readline, ''):
             if time.time() - start > TIMEOUT_SECS:
                 proc.kill()
-                log('⏱️ Timeout de 30 minutos alcanzado. El proceso fue detenido.')
+                log('Timeout de 30 minutos alcanzado. El proceso fue detenido.')
                 with _lock:
                     _state['error'] = 'Timeout'
                 break
@@ -75,7 +110,10 @@ def _run(limite=None):
             _state['running'] = False
 
 
+# ── Rutas protegidas ──────────────────────────────────────────────────────────
+
 @app.route('/')
+@login_required
 def index():
     with _lock:
         running = _state['running']
@@ -89,6 +127,7 @@ def health():
 
 
 @app.route('/generar', methods=['POST'])
+@login_required
 def generar():
     data = request.get_json(silent=True) or {}
     limite = data.get('limite')
@@ -114,6 +153,7 @@ def generar():
 
 
 @app.route('/stream')
+@login_required
 def stream():
     def generate():
         sent = 0
@@ -152,6 +192,7 @@ def stream():
 
 
 @app.route('/descargar')
+@login_required
 def descargar():
     with _lock:
         f = _state['output_file']
